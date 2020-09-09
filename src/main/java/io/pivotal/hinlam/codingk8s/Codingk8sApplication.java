@@ -1,25 +1,15 @@
 package io.pivotal.hinlam.codingk8s;
 
 import com.google.gson.Gson;
-import io.kubernetes.client.extended.controller.reconciler.Reconciler;
-import io.kubernetes.client.extended.controller.reconciler.Request;
-import io.kubernetes.client.extended.controller.reconciler.Result;
-import io.kubernetes.client.informer.SharedIndexInformer;
-import io.kubernetes.client.informer.cache.Indexer;
-import io.kubernetes.client.informer.cache.Lister;
 import io.kubernetes.client.openapi.models.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication
 public class Codingk8sApplication {
@@ -27,98 +17,113 @@ public class Codingk8sApplication {
     public static void main(String[] args) throws IOException {
         getCRD();
 
+        getCRDDatabase();
+
         //SpringApplication.run(Codingk8sApplication.class, args);
     }
 
+    public static void getCRDDatabase(){
 
-    public static V1beta1CustomResourceValidation getCRDValidation(){
-        V1beta1JSONSchemaProps mysql_cluster_size = new V1beta1JSONSchemaPropsBuilder()
+        V1ObjectMeta meta = new V1ObjectMetaBuilder()
+                .withName("mydb")
+                .build();
+
+
+    }
+
+
+    public static V1CustomResourceValidation getCRDValidation(){
+        V1JSONSchemaProps mysql_cluster_size = new V1JSONSchemaPropsBuilder()
                 .withType("integer")
                 .withMaximum(7d)
                 .build();
 
-        V1beta1JSONSchemaProps mysql_db_encoding = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps mysql_db_encoding = new V1JSONSchemaPropsBuilder()
                 .withType("string")
                 .withEnum("utf8", "swe7", "ascii", "cp932")
                 .build();
 
-        V1beta1JSONSchemaProps mysql_version_property = new V1beta1JSONSchemaPropsBuilder()
-                .withType("string")
+        V1JSONSchemaProps mysql_version_property = new V1JSONSchemaPropsBuilder()
+                .withType("number")
                 .build();
 
-        V1beta1JSONSchemaProps autoscaling_by = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps autoscaling_by = new V1JSONSchemaPropsBuilder()
                 .withType("string")
                 .withEnum("IO", "CPU", "RAM", "Storage")
                 .build();
 
-        V1beta1JSONSchemaProps autoscaling_up_threshold = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps autoscaling_out_threshold = new V1JSONSchemaPropsBuilder()
                 .withType("number")
                 .withMaximum(1d)
                 .withMinimum(0d)
                 .build();
 
-        V1beta1JSONSchemaProps autoscaling_down_threshold = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps autoscaling_in_threshold = new V1JSONSchemaPropsBuilder()
                 .withType("number")
                 .withMaximum(1d)
                 .withMinimum(0d)
                 //.withDefault(0.05) //does not work in K8S 1.15
                 .build();
 
-        Map<String, V1beta1JSONSchemaProps> autoscaling_properties = new HashMap<>();
+        Map<String, V1JSONSchemaProps> autoscaling_properties = new HashMap<>();
         autoscaling_properties.put("by", autoscaling_by);
-        autoscaling_properties.put("scaleUp", autoscaling_up_threshold);
-        autoscaling_properties.put("scaleDown", autoscaling_down_threshold);
+        autoscaling_properties.put("scale-out", autoscaling_out_threshold);
+        autoscaling_properties.put("scale-in", autoscaling_in_threshold);
 
-        V1beta1JSONSchemaProps mysql_cluster_autoscaling = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps mysql_cluster_autoscaling = new V1JSONSchemaPropsBuilder()
                 .withProperties(autoscaling_properties)
-                .withRequired(Arrays.asList("by", "scaleUp", "scaleDown"))
+                .withType("object")
+                .withRequired(Arrays.asList("by", "scale-in", "scale-out"))
                 .build();
 
-        V1beta1JSONSchemaProps cpu_resource_limit = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps cpu_resource_limit = new V1JSONSchemaPropsBuilder()
                 .withType("integer")
                 .withMinimum(1d)
                 .build();
 
-        V1beta1JSONSchemaProps ram_resource_limit = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps ram_resource_limit = new V1JSONSchemaPropsBuilder()
                 .withType("string")
                 .build();
 
-        V1beta1JSONSchemaProps disk_resource_limit = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps disk_resource_limit = new V1JSONSchemaPropsBuilder()
                 .withType("string")
                 .build();
 
-        Map<String, V1beta1JSONSchemaProps> resource_limit_properties = new HashMap<>();
+        Map<String, V1JSONSchemaProps> resource_limit_properties = new HashMap<>();
         resource_limit_properties.put("CPU", cpu_resource_limit);
         resource_limit_properties.put("RAM", ram_resource_limit);
         resource_limit_properties.put("Disk",disk_resource_limit);
 
-        V1beta1JSONSchemaProps mysql_resource_limit = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps mysql_resource_limit = new V1JSONSchemaPropsBuilder()
                 .withProperties(resource_limit_properties)
+                .withType("object")
                 .build();
 
-        Map<String, V1beta1JSONSchemaProps> spec_properties = new HashMap<>();
-        spec_properties.put("mysqlVersion",mysql_version_property);
-        spec_properties.put("mysqlDbEncoding", mysql_db_encoding);
-        spec_properties.put("clusterSize", mysql_cluster_size);
+        Map<String, V1JSONSchemaProps> spec_properties = new HashMap<>();
+        spec_properties.put("mysql-version",mysql_version_property);
+        spec_properties.put("mysql-db-encoding", mysql_db_encoding);
+        spec_properties.put("cluster-size", mysql_cluster_size);
         spec_properties.put("autoscaling", mysql_cluster_autoscaling);
-        spec_properties.put("limits", mysql_resource_limit);
+        spec_properties.put("resource-limits", mysql_resource_limit);
 
-        V1beta1JSONSchemaProps top_spec = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps top_spec = new V1JSONSchemaPropsBuilder()
+                .withType("object")
                 .withProperties(spec_properties)
                 .withRequired(Arrays.asList("autoscaling"))
                 .build();
-        Map<String, V1beta1JSONSchemaProps> top_spec_map = new HashMap<>();
+
+        Map<String, V1JSONSchemaProps> top_spec_map = new HashMap<>();
         top_spec_map.put("spec", top_spec);
 
 
-        V1beta1JSONSchemaProps openApiSchema = new V1beta1JSONSchemaPropsBuilder()
+        V1JSONSchemaProps openApiSchema = new V1JSONSchemaPropsBuilder()
                 .withType("object")
                 .withProperties(top_spec_map)
                 .withRequired(Arrays.asList("spec"))
                 .withDescription("spec level description")
                 .build();
 
-        V1beta1CustomResourceValidation validation = new V1beta1CustomResourceValidationBuilder()
+        V1CustomResourceValidation validation = new V1CustomResourceValidationBuilder()
                 .withOpenAPIV3Schema(openApiSchema)
                 .build();
 
@@ -126,7 +131,6 @@ public class Codingk8sApplication {
     }
 
     public static void getCRD(){
-
         String groupName = "database.hinlam.io";
         String kindName = "MySQL";
         String listKind = kindName+"List";
@@ -137,13 +141,35 @@ public class Codingk8sApplication {
                 .withName("mysqls" + "." + groupName.toLowerCase())
                 .build();
 
-        V1beta1CustomResourceDefinitionVersion crdV1alpha1 = new V1beta1CustomResourceDefinitionVersionBuilder()
+        V1CustomResourceColumnDefinition clusterSizeColumn = new V1CustomResourceColumnDefinitionBuilder()
+                .withJsonPath(".spec.cluster-size")
+                .withName("ClusterSize")
+                .withDescription("Size of a cluster")
+                .withType("integer")
+                .build();
+
+        V1CustomResourceSubresourceScale crsrScale =  new V1CustomResourceSubresourceScaleBuilder()
+                .withSpecReplicasPath(".spec.clusterSize")
+                .withStatusReplicasPath(".status.clusterSize")
+                .build();
+
+        Map<String, Integer> myCustomStatus = new HashMap<>();
+        myCustomStatus.put("clusterSize",0);
+        V1CustomResourceSubresources crdSubRes = new V1CustomResourceSubresourcesBuilder()
+                .withStatus(myCustomStatus)
+                .withScale(crsrScale)
+                .build();
+
+        V1CustomResourceDefinitionVersion crdV1 = new V1CustomResourceDefinitionVersionBuilder()
                 .withName("v1alpha1")
                 .withServed(true)
                 .withStorage(true)
+                .withAdditionalPrinterColumns(clusterSizeColumn)
+                .withSchema(getCRDValidation())
+                .withSubresources(crdSubRes)
                 .build();
 
-        V1beta1CustomResourceDefinitionNames names = new V1beta1CustomResourceDefinitionNamesBuilder()
+        V1CustomResourceDefinitionNames names = new V1CustomResourceDefinitionNamesBuilder()
                 .withKind(kindName)
                 .withSingular(singular)
                 .withPlural(plural)
@@ -151,37 +177,14 @@ public class Codingk8sApplication {
                 .withCategories("hinlamdb", "all")
                 .build();
 
-        V1beta1CustomResourceColumnDefinition clusterSizeColumn = new V1beta1CustomResourceColumnDefinitionBuilder()
-                .withJsONPath(".spec.clusterSize")
-                .withName("ClusterSize")
-                .withDescription("Size of a cluster")
-                .withType("integer")
-                .build();
-
-        Map<String, Integer> myCustomStatus = new HashMap<>();
-        myCustomStatus.put("clusterSize",0);
-
-        V1beta1CustomResourceSubresourceScale crsrScale =  new V1beta1CustomResourceSubresourceScaleBuilder()
-                .withSpecReplicasPath(".spec.clusterSize")
-                .withStatusReplicasPath(".status.clusterSize")
-                .build();
-
-        V1beta1CustomResourceSubresources crdSubRes = new V1beta1CustomResourceSubresourcesBuilder()
-                .withStatus(myCustomStatus)
-                .withScale(crsrScale)
-                .build();
-
-        V1beta1CustomResourceDefinitionSpec crdSpec = new V1beta1CustomResourceDefinitionSpecBuilder()
+        V1CustomResourceDefinitionSpec crdSpec = new V1CustomResourceDefinitionSpecBuilder()
                 .withGroup(groupName)
-                .withVersions(crdV1alpha1)
+                .withVersions(crdV1)
                 .withScope("Namespaced")
                 .withNames(names)
-                .withAdditionalPrinterColumns(Arrays.asList(clusterSizeColumn))
-                .withValidation(getCRDValidation())
-                .withSubresources(crdSubRes)
                 .build();
 
-        V1beta1CustomResourceDefinitionStatus crdStatus = new V1beta1CustomResourceDefinitionStatusBuilder()
+        V1CustomResourceDefinitionStatus crdStatus = new V1CustomResourceDefinitionStatusBuilder()
                 .withNewAcceptedNames()
                     .withKind(kindName)
                     .withPlural(plural)
@@ -190,8 +193,8 @@ public class Codingk8sApplication {
                 .endAcceptedNames()
                 .build();
 
-        V1beta1CustomResourceDefinition crd = new V1beta1CustomResourceDefinitionBuilder()
-                .withApiVersion("apiextensions.k8s.io/v1beta1")
+        V1CustomResourceDefinition crd = new V1CustomResourceDefinitionBuilder()
+                .withApiVersion("apiextensions.k8s.io/v1")
                 .withKind("CustomResourceDefinition")
                 .withMetadata(crdMeta)
                 .withSpec(crdSpec)

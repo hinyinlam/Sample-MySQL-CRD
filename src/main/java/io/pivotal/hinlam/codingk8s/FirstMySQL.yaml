@@ -1,0 +1,17 @@
+apiVersion: database.hinlam.io/v1alpha1
+kind: MySQL
+metadata:
+  name: mysql-cluster-a
+  namespace: default
+spec:
+  mysql-version: 8.0
+  mysql-db-encoding: utf8
+  cluster-size: 5
+  autoscaling:
+    by: IO
+    scale-out: 0.8 #80%
+    scale-in: 0.2 #20%
+  resource-limits:
+    CPU: 2
+    RAM: 10G
+    Disk: 200G
