@@ -149,8 +149,8 @@ public class Codingk8sApplication {
                 .build();
 
         V1CustomResourceSubresourceScale crsrScale =  new V1CustomResourceSubresourceScaleBuilder()
-                .withSpecReplicasPath(".spec.clusterSize")
-                .withStatusReplicasPath(".status.clusterSize")
+                .withSpecReplicasPath(".spec.cluster-size")
+                .withStatusReplicasPath(".status.cluster-size")
                 .build();
 
         Map<String, Integer> myCustomStatus = new HashMap<>();
