@@ -2,6 +2,7 @@ package io.pivotal.hinlam.codingk8s;
 
 import com.google.gson.Gson;
 import io.kubernetes.client.openapi.models.*;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.File;
@@ -15,26 +16,17 @@ import java.util.Map;
 public class Codingk8sApplication {
 
     public static void main(String[] args) throws IOException {
-        getCRD();
-
-        getCRDDatabase();
+        getMySQL_GKV_CRD();
 
         //SpringApplication.run(Codingk8sApplication.class, args);
     }
 
-    public static void getCRDDatabase(){
-
-        V1ObjectMeta meta = new V1ObjectMetaBuilder()
-                .withName("mydb")
-                .build();
-
-
-    }
 
 
     public static V1CustomResourceValidation getCRDValidation(){
         V1JSONSchemaProps mysql_cluster_size = new V1JSONSchemaPropsBuilder()
                 .withType("integer")
+                .withDefault(3)
                 .withMaximum(7d)
                 .build();
 
@@ -130,7 +122,7 @@ public class Codingk8sApplication {
         return validation;
     }
 
-    public static void getCRD(){
+    public static void getMySQL_GKV_CRD(){
         String groupName = "database.hinlam.io";
         String kindName = "MySQL";
         String listKind = kindName+"List";

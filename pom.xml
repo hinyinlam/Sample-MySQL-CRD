@@ -15,7 +15,7 @@
     <description>Coding K8S</description>
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>11</java.version>
     </properties>
 
     <dependencies>
@@ -58,13 +58,13 @@
         <dependency>
             <groupId>io.kubernetes</groupId>
             <artifactId>client-java</artifactId>
-            <version>9.0.2</version>
+            <version>12.0.1</version>
         </dependency>
         <!--This is write yourself a controller dependencies-->
         <dependency>
             <groupId>io.kubernetes</groupId>
             <artifactId>client-java-extended</artifactId>
-            <version>9.0.2</version>
+            <version>12.0.1</version>
         </dependency>
 
 
