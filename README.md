@@ -13,3 +13,23 @@ There is a companion [blog post](https://hinyinlam.medium.com/kubernetes-custom-
 
 ## Not for production
 This sample is far away from production ready as it deliberately target for textbook example and ignore operation readiness (upgrade/retry/corner cases/testing).
+
+## How to get the YAML and JSON output:
+`./mvnw package`
+`java -jar target/codingk8s-0.0.1-SNAPSHOT.jar`
+
+## Where is the example controller:
+The example controller is located at:
+`src/main/java/io/pivotal/hinlam/codingk8s/controller/MySQLController.java`
+
+If you want to run the controller, uncomment  
+`https://github.com/hinyinlam/Sample-MySQL-CRD/blob/92cb7e7a96f6fa0517d4e6c17c7c7b7015220755/src/main/java/io/pivotal/hinlam/codingk8s/controller/MySQLController.java#L63`
+
+And
+
+`./mvnw package`
+`java -jar target/codingk8s-0.0.1-SNAPSHOT.jar`
+
+Of course this is an area to improve.
+
+
